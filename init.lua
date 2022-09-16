@@ -114,6 +114,7 @@ local config = {
 
   -- Extend LSP configuration
   lsp = {
+    skip_setup = { "rust-analyzer" }, -- skip lsp setup because rust-tools will do it itself
     -- enable servers that you already have installed without mason
     servers = {
       -- "pyright"
@@ -203,6 +204,54 @@ local config = {
       --     require("lsp_signature").setup()
       --   end,
       -- },
+
+      -- Rust support
+      {
+        "simrat39/rust-tools.nvim",
+        after = "mason-lspconfig.nvim", -- make sure to load after mason-lspconfig
+        config = function()
+          require("rust-tools").setup {
+            server = astronvim.lsp.server_settings "rust_analyzer", -- get the server settings and built in capabilities/on_attach
+          }
+        end,
+      },
+      {
+        "Saecki/crates.nvim",
+        after = "nvim-cmp",
+        config = function()
+          require("crates").setup()
+
+          local cmp = require "cmp"
+          local config = cmp.get_config()
+          table.insert(config.sources, { name = "crates", priority = 1100 })
+          cmp.setup(config)
+
+          -- Crates mappings:
+          local map = vim.api.nvim_set_keymap
+          map("n", "<leader>Ct", ":lua require('crates').toggle()<cr>", { desc = "Toggle extra crates.io information" })
+          map("n", "<leader>Cr", ":lua require('crates').reload()<cr>", { desc = "Reload information from crates.io" })
+          map("n", "<leader>CU", ":lua require('crates').upgrade_crate()<cr>", { desc = "Upgrade a crate" })
+          map("v", "<leader>CU", ":lua require('crates').upgrade_crates()<cr>", { desc = "Upgrade selected crates" })
+          map("n", "<leader>CA", ":lua require('crates').upgrade_all_crates()<cr>", { desc = "Upgrade all crates" })
+        end,
+      },
+
+      -- Themes
+      {
+        "rebelot/kanagawa.nvim",
+        as = "kanagawa",
+        config = function() require("kanagawa").setup {} end,
+      },
+      -- {
+      --   "gruvbox-community/gruvbox",
+      --   as = "gruvbox",
+      --   config = function() require("gruvbox").setup {} end,
+      -- },
+      {
+        "ellisonleao/gruvbox.nvim",
+        as = "gruvbox",
+        config = function() require("gruvbox").setup {} end,
+      },
     },
     -- All other entries override the require("<key>").setup({...}) call for default plugins
     ["null-ls"] = function(config) -- overrides `require("null-ls").setup(config)`
@@ -234,7 +283,7 @@ local config = {
     },
     -- use mason-lspconfig to configure LSP installations
     ["mason-lspconfig"] = { -- overrides `require("mason-lspconfig").setup(...)`
-      ensure_installed = { "sumneko_lua" },
+      ensure_installed = { "sumneko_lua, rust_analyzer" },
     },
     -- use mason-tool-installer to configure DAP/Formatters/Linter installation
     ["mason-tool-installer"] = { -- overrides `require("mason-tool-installer").setup(...)`
