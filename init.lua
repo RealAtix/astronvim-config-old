@@ -114,7 +114,7 @@ local config = {
 
   -- Extend LSP configuration
   lsp = {
-    skip_setup = { "rust-analyzer" }, -- skip lsp setup because rust-tools will do it itself
+    skip_setup = { "rust-analyzer", "tsserver" }, -- skip lsp setup because rust-tools will do it itself
     -- enable servers that you already have installed without mason
     servers = {
       -- "pyright"
@@ -236,6 +236,17 @@ local config = {
         end,
       },
 
+      -- TS support
+      {
+        "jose-elias-alvarez/typescript.nvim",
+        after = "mason-lspconfig.nvim",
+        config = function()
+          require("typescript").setup {
+            server = astronvim.lsp.server_settings "tsserver",
+          }
+        end,
+      },
+
       -- Themes
       {
         "rebelot/kanagawa.nvim",
@@ -252,6 +263,14 @@ local config = {
         as = "gruvbox",
         config = function() require("gruvbox").setup {} end,
       },
+      -- {
+      --   "shaunsingh/oxocarbon.nvim",
+      --   branch = "fennel",
+      --   -- as = "oxocarbon",
+      -- },
+
+      -- Other
+      { "ThePrimeagen/vim-be-good" },
     },
     -- All other entries override the require("<key>").setup({...}) call for default plugins
     ["null-ls"] = function(config) -- overrides `require("null-ls").setup(config)`
@@ -268,7 +287,7 @@ local config = {
       -- set up null-ls's on_attach function
       -- NOTE: You can remove this on attach function to disable format on save
       config.on_attach = function(client)
-        if client.resolved_capabilities.document_formatting then
+        if client.server_capabilities.document_formatting then
           vim.api.nvim_create_autocmd("BufWritePre", {
             desc = "Auto format before save",
             pattern = "<buffer>",
@@ -283,7 +302,7 @@ local config = {
     },
     -- use mason-lspconfig to configure LSP installations
     ["mason-lspconfig"] = { -- overrides `require("mason-lspconfig").setup(...)`
-      ensure_installed = { "sumneko_lua, rust_analyzer" },
+      ensure_installed = { "sumneko_lua", "rust_analyzer", "tsserver" },
     },
     -- use mason-tool-installer to configure DAP/Formatters/Linter installation
     ["mason-tool-installer"] = { -- overrides `require("mason-tool-installer").setup(...)`
@@ -291,6 +310,13 @@ local config = {
     },
     packer = { -- overrides `require("packer").setup(...)`
       compile_path = vim.fn.stdpath "data" .. "/packer_compiled.lua",
+    },
+    telescope = {
+      defaults = {
+        file_ignore_patterns = {
+          "node_modules",
+        },
+      },
     },
   },
 
